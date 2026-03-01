@@ -32,14 +32,14 @@
  * @brief 类成员声明开始
  * @tparam class_name 类名称，可作为对象的变量类型
  */
-#define CLASS_DECLARE_START(class_name) \
+#define CLASS_DECLARE(class_name) \
     typedef struct tag_eoopc_class_##class_name {
 
 /**
  * @brief 类成员声明结束
  * @tparam class_name 类名称，可作为对象的变量类型
  */
-#define CLASS_DECLARE_END(class_name) \
+#define DECLARE_END(class_name) \
     } class_name;
 
 /**
@@ -80,18 +80,6 @@
  */
 #define PUBLIC_MEMBER_REF(member_name) \
     member_name
-
-/**
- * @brief 声明类的方法开始
- * @tparam class_name 类名称，可作为对象的变量类型
- */
-#define PUBLIC_METHOD_DECLARE_START(class_name)
-
-/**
- * @brief 声明类的方法结束
- * @tparam class_name 类名称，可作为对象的变量类型
- */
-#define PUBLIC_METHOD_DECLARE_END(class_name)
 /** @} */
 
 /** ---------------------------------------------------------------
@@ -141,7 +129,7 @@
  * @note 必须放在类成员声明的开始和结束之间
  */
 #define VMETHOD(ret_type, method_name, class_name, ...) \
-    ret_type (*##method_name)(class_name, __VA_ARGS__)
+    ret_type (*##method_name)(class_name *pthis, __VA_ARGS__)
 
 /**
  * @brief 设置对象的虚函数指向
@@ -161,6 +149,66 @@
  */
 #define VMETHOD_CALL(method_name) \
     method_name
+/** @} */
+
+/** ---------------------------------------------------------------
+ * @addtogroup 构造/析构相关的宏
+ * @{
+ ** --------------------------------------------------------------*/
+
+/**
+ * @brief 声明一个构造函数
+ * @tparam method_name 构造函数名称
+ * @tparam class_name 属于哪个类
+ * @tparam ... 构造函数参数
+ */
+#define CONSTRUCT_METHOD(method_name, class_name, ...) \
+    void _oopc_ctor_##method_name(class_name *pthis, ##__VA_ARGS__)
+
+/**
+ * @brief 调用构造函数，初始化一个对象
+ * @tparam method_name 构造函数名称
+ * @tparam pthis 需要被构造的对象指针
+ * @tparam ... 构造函数参数
+ */
+#define CONSTRUCT(pthis, method_name, ...) \
+    _oopc_ctor_##method_name(pthis, ##__VA_ARGS__)
+
+/**
+ * @brief 在构造函数实现中，调用父类构造函数
+ * @tparam pthis 需要被构造的对象
+ * @tparam father_class_name 需要被构造的父类成分
+ * @tparam father_ctor_name 调用父类的哪个构造函数
+ */
+#define CONSTRUCT_BRINGUP(pthis, father_class_name, father_ctor_name, ...) \
+    _oopc_ctor_##father_ctor_name(THIS_PARENT(pthis, father_class_name), ##__VA_ARGS__)
+
+/**
+ * @brief 声明一个析构函数
+ * @tparam method_name 析构函数名称
+ * @tparam class_name 属于哪个类
+ * @tparam ... 构造函数参数
+ */
+#define DESTRUCT_METHOD(method_name, class_name, ...) \
+    void _oopc_dtor_##method_name(class_name *pthis, ##__VA_ARGS__)
+
+/**
+ * @brief 调用析构函数，释放一个对象
+ * @tparam method_name 析构函数名称
+ * @tparam pthis 需要被构造的对象指针
+ * @tparam ... 构造函数参数
+ */
+#define DESTRUCT(pthis, method_name, ...) \
+    _oopc_dtor_##method_name(pthis, ##__VA_ARGS__)
+
+/**
+ * @brief 在析构函数实现中，调用父类析构函数
+ * @tparam pthis 需要被析构的对象
+ * @tparam father_class_name 需要被析构的父类成分
+ * @tparam father_ctor_name 调用父类的哪个构造函数
+ */
+#define DESTRUCT_BRINGDOWN(pthis, father_class_name, father_ctor_name, ...) \
+    _oopc_dtor_##father_ctor_name(THIS_PARENT(pthis, father_class_name), ##__VA_ARGS__)
 /** @} */
 
 #endif
