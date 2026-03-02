@@ -1,0 +1,37 @@
+name: Easy-OOPC CI workflow
+
+# 触发条件：push 或 pull request 到 main 分支（可根据需要修改）
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest   # 使用最新 Ubuntu 环境
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake gcc
+
+      - name: Configure CMake
+        run: |
+          cd eoopc/example_test
+          mkdir build
+          cd build
+          cmake ..
+
+      - name: Build
+        run: |
+          cd ./eoopc/example_test/build
+          make
+
+      - name: Run test
+        run: |
+          ./eoopc/example_test/build/eoopc_testcase

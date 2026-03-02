@@ -23,6 +23,12 @@
 #ifndef EOOPC_H__
 #define EOOPC_H__
 
+/**
+ * @brief 获取一个成员在结构体中的偏移
+ */
+#define EOOPC_OFFSETOF(type, member) \
+    ((size_t)(&((type *)0)->member))
+
 /** ---------------------------------------------------------------
  * @addtogroup 封装相关的宏
  * @{
@@ -64,22 +70,19 @@
 
 /**
  * @brief 获取对象私有成员的引用
+ * @tparam object_this 对象指针
  * @tparam member_name 私有成员名称
- * 
- * @note 使用方式: object->PRIVATE_MEMBER_REF(xxx)
  */
-#define PRIVATE_MEMBER_REF(member_name) \
-    _oopc_private_##member_name
+#define PRIVATE_MEMBER_REF(object_this, member_name) \
+    object_this->_oopc_private_##member_name
 
 /**
  * @brief 获取对象公开成员的引用
  * @tparam member_name 私有成员名称
- * 
- * @note 使用方式: object->PRIVATE_MEMBER_REF(xxx)
- * @note 当然，公开成员可以通过.和->运算符直接访问到，不一定需要使用此宏
+ * @note 公开成员可以通过.和->运算符直接访问到，不一定需要使用此宏
  */
-#define PUBLIC_MEMBER_REF(member_name) \
-    member_name
+#define PUBLIC_MEMBER_REF(object_this, member_name) \
+    object_this->member_name
 /** @} */
 
 /** ---------------------------------------------------------------
@@ -129,26 +132,35 @@
  * @note 必须放在类成员声明的开始和结束之间
  */
 #define VMETHOD(ret_type, method_name, class_name, ...) \
-    ret_type (*##method_name)(class_name *pthis, __VA_ARGS__)
+    ret_type (*method_name)(struct tag_eoopc_class_##class_name *pthis, __VA_ARGS__)
+
+/**
+ * @brief 将当前类型的指针转变为子类指针
+ * @tparam obj_this 需要被转换的对象指针
+ * @tparam this_class_name 该指针的类型
+ * @tparam child_class_name 子类类型
+ * 
+ * @warning 需要确保该被转换的指针 转换自子类。否则有野指针风险
+ */
+#define THIS_CHILD(obj_this, this_class_name, child_class_name) \
+    (child_class_name *)((uint8_t *)obj_this - EOOPC_OFFSETOF(child_class_name, eoopc_inherit_##this_class_name))
 
 /**
  * @brief 设置对象的虚函数指向
+ * @tparam object_this 对象this指针
  * @tparam method_name 虚函数名称
  * @tparam method_implement 指向哪一个实现
- * 
- * @note 使用方式为 object->VMETHOD_SET(xxx, xxx);
  */
-#define VMETHOD_SET(method_name, method_implement) \
-    method_name = (method_implement)
+#define VMETHOD_SET(object_this, method_name, method_implement) \
+    object_this->method_name = (method_implement)
 
 /**
  * @brief 调用对象的虚函数
+ * @tparam object_this 对象this指针
  * @tparam method_name 虚函数名称
- * 
- * @note 使用方式为 object->VMETHOD_SET(xxx, xxx);
  */
-#define VMETHOD_CALL(method_name) \
-    method_name
+#define VMETHOD_CALL(object_this, method_name, ...) \
+    (object_this->method_name)((object_this), ##__VA_ARGS__)
 /** @} */
 
 /** ---------------------------------------------------------------
@@ -180,7 +192,7 @@
  * @tparam father_class_name 需要被构造的父类成分
  * @tparam father_ctor_name 调用父类的哪个构造函数
  */
-#define CONSTRUCT_BRINGUP(pthis, father_class_name, father_ctor_name, ...) \
+#define CONSTRUCT_BRINGUP(father_class_name, father_ctor_name, ...) \
     _oopc_ctor_##father_ctor_name(THIS_PARENT(pthis, father_class_name), ##__VA_ARGS__)
 
 /**
@@ -207,7 +219,7 @@
  * @tparam father_class_name 需要被析构的父类成分
  * @tparam father_ctor_name 调用父类的哪个构造函数
  */
-#define DESTRUCT_BRINGDOWN(pthis, father_class_name, father_ctor_name, ...) \
+#define DESTRUCT_BRINGDOWN(father_class_name, father_ctor_name, ...) \
     _oopc_dtor_##father_ctor_name(THIS_PARENT(pthis, father_class_name), ##__VA_ARGS__)
 /** @} */
 
