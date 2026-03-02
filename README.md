@@ -1,13 +1,16 @@
 # 一、组件介绍
 一个轻量化的面向对象编程框架，在不支持C++的嵌入式工具链下（例如AC5），提供基础的面向对象抽象能力。
+
 [![easy_oopc CI-workflow](https://github.com/CYK-dot/easy_oopc/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/CYK-dot/easy_oopc/actions/workflows/ci.yml)
 
 优势：
 - 纯宏头文件设计，无函数调用带来的栈开销。
 - 相比于通过void*继承，eoopc的继承是类型安全的。
 - 仅虚函数采用函数指针实现，程序调用流直观。
+
 需要忍受的内容
-- 虽然类型安全，但不确保报错提示直观。毕竟C语言不直接支持面向对象，问题能被拦截在编译期或许已经是好事了...
+- 虽然类型安全，但不确保报错提示直观。
+- 虚函数编程涉及向下类型转换，需要人为确保该行为合法，无法通过编译拦截。
 
 ## 1.1 功能描述
 1. 封装
@@ -32,57 +35,64 @@
 ```c
 CLASS_DECLARE_START(example_class)
     int example_member;
-CLASS_DECLARE_END(example_class)
+DECLARE_END(example_class)
 ```
 
 成员函数由用户自行声明和定义，不应放入 CLASS_DECLARE_START 和 CLASS_DECLARE_END之间。
 
-成员函数通常的声明方式是，把对象指针放在第一个形参。
+成员函数通常的声明方式是，把对象指针放在第一个形参，并称为pthis。
 ```c
-int example_method(example_class *class);
+int example_method(example_class *pthis);
 ```
 
-私有成员通过PRIVATE_MEMBER宏声明和获取。
+公开成员声明方式：直接在类中声明变量
+```c
+CLASS_DECLARE_START(example_public)
+    int public_member1;
+DECLARE_END(example_public);
+```
+
+私有成员：通过PRIVATE_MEMBER宏声明。
 ```c
 CLASS_DECLARE_START(example_class)
     int example_member;
-    int PRIVATE_MEMBER(example_private_member);
-CLASS_DECLARE_END(example_class)
-
-int example_method(example_class *object)
-{
-    object->PRIVATE_MEMBER(example_private_member) = 10;
-    return 0;
-}
+    PRIVATE_MEMBER(int, example_private_member);
+DECLARE_END(example_class);
 ```
 
-不加任何声明，默认为公开成员。当然，也可以使用 PUBLIC_MEMBER宏显式声明，并通过OBJECT_PUBLIC_MEMBER显式获取。
+公开成员访问：直接通过.或->运算访问
 ```c
-CLASS_DECLARE_START(example_class)
-    int PUBLIC_MEMBER(example_member);
-    int PRIVATE_MEMBER(example_private_member);
-CLASS_DECLARE_END(example_class)
-
-int example_method(example_class *object)
+int example_method(example_public *pthis)
 {
-    object->PRIVATE_MEMBER(example_private_member) = 10;
-    object->PUBLIC_MEMBER(example_member) = 10;
+    pthis->public_member2 = 10;
     return 0;
 }
 ```
+
+私有成员访问：通过PRIVATE_MEMBER_REF访问。
+```c
+int example_method(example_class *pthis)
+{
+    PRIVATE_MEMBER_REF(pthis, example_private_member) = 10;
+    return 0;
+}
+```
+受制于C语言语法，eoopc的封装并非强制性的，比如可以通过对象指针访问到私有成员。
+
+换言之，eoopc提供的封装功能，其实是文档性质的。
 
 ---
 ## 2.2. 继承
-在 CLASS_DECLARE_START 和 CLASS_DECLARE_END 之间，通过CLASS_EXTENDS宏声明继承关系。
+在 CLASS_DECLARE_START 和 DECLARE_END 之间，通过CLASS_EXTENDS宏声明继承关系。
 ```c
 CLASS_DECLARE_START(example_class)
     int example_member;
-CLASS_DECLARE_END(example_class)
+DECLARE_END(example_class);
 
 CLASS_DECLARE_START(example_child_class)
     CLASS_EXTENDS(example_class);
     int example_member2;
-CLASS_DECLARE_END(example_child_class)
+DECLARE_END(example_child_class);
 ```
 
 宏机制无法实现真正的继承。eoopc的继承是通过组合来实现的。
@@ -99,14 +109,14 @@ int print_member(example_child_class *obj)
 
 ---
 ## 2.3. 多态
-eoopc当前仅支持运行时多态。可在类中用VMETHOD声明多态函数。
+eoopc当前仅支持成员函数的运行时多态。可在类中用VMETHOD声明多态函数。
 ```c
 CLASS_DECLARE_START(example_poly)
     /* inherit */
     CLASS_EXTENDS(example_class);
     /* members */
     int example_member;
-    int PRIVATE(example_private_member);
+    PRIVATE_MEMBER(int, example_private_member);
     /* virtual methods */
     VMETHOD(void, vmethod1, example_poly, int, int); /**< void vmethod1(example_poly *, float, float) */
 CLASS_DECLARE_END(example_poly)
@@ -133,6 +143,23 @@ void example_poly_object_construct(example_poly *obj, bool isAdd)
     obj->VMETHOD_SET(example_poly) = eample_member_minus;
 }
 ```
+
+多态一般与继承组合使用。此时需要使用 THIS_CHILD 宏向下进行类型转换，否则会因为指针类型不匹配造成未定义行为。
+```c
+void eample_member_add(example_poly_child *pthis, int num1, int num2) // 错误的多态函数
+{
+    ...
+}
+void eample_member_add(example_poly *obj, int num1, int num2) // 正确的多态函数
+{
+    example_poly_child *pthis = THIS_CHILD(obj, example_poly, example_poly_child);
+    ...
+}
+```
+
+要注意的是，THIS_CHILD宏仅让指针向前偏移，不涉及任何dump、赋值操作。
+
+因此，如果将父类指针转成了一个不匹配的子类指针，编译器并不会报错，运行时则会造成未定义行为。
 
 # 四、附录2：什么时候需要面向对象
 **面向对象是一种抽象思维工具，旨在将复杂的抽象问题化整为零，简化认知，用概念去思考，而不是陷入细节。**
