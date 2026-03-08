@@ -27,53 +27,84 @@
 
 TESTCASE(basic_encap)
 {
-    animal dog;
-    CONSTRUCT(&dog, animal_ctor, "dog");
-    ASSERT_STR_EQ(dog.name, "dog", "constructor of dog not act as expected.");
+    counter c;
+    float result;
 
-    int last_health = dog.health;
-    animal_eat(&dog, 5);
-    ASSERT_EQ(dog.health, last_health + 5, "method animal_eat not act as expected.");
+    // 测试初始值
+    METHOD_CTOR(counter)(&c, 0);
+    ASSERT_EQ(METHOD_PUB(counter, get_value)(&c), 0, "counter初始值错误");
 
-    last_health = dog.health;
-    animal_starve(&dog);
-    animal_starve(&dog);
-    ASSERT_EQ(dog.health, last_health - 1, "method animal_starve not act as expected.");
+    // 测试递增
+    METHOD_PUB(counter, increment)(&c);
+    ASSERT_EQ(METHOD_PUB(counter, get_value)(&c), 1, "counter递增后值错误");
 
+    // 测试递增多次
+    METHOD_PUB(counter, increment)(&c);
+    METHOD_PUB(counter, increment)(&c);
+    ASSERT_EQ(METHOD_PUB(counter, get_value)(&c), 3, "多次increment后值错误");
+
+    // 测试递减
+    METHOD_PUB(counter, decrement)(&c);
+    ASSERT_EQ(METHOD_PUB(counter, get_value)(&c), 2, "decrement后值错误");
+
+    // 测试重置
+    METHOD_PUB(counter, reset)(&c);
+    ASSERT_EQ(METHOD_PUB(counter, get_value)(&c), 0, "reset后值错误");
+
+    METHOD_DTOR(counter)(&c);
     return 0;
 }
 
 TESTCASE(basic_inherit)
 {
-    human lihua;
-    CONSTRUCT(&lihua, human_ctor, "Lihua", "China");
+    limited_counter lc;
+    float result;
 
-    animal *lihua_super = THIS_PARENT(&lihua, animal);
-    int last_health = lihua_super->health;
-    animal_eat(lihua_super, 5);
-    ASSERT_EQ(lihua_super->health, last_health + 5, "method animal_eat not act as expected.");
+    // 测试继承的counter功能
+    METHOD_CTOR(limited_counter)(&lc, 0, 10);
+    counter *pc = THIS_PARENT(&lc, counter);
+    ASSERT_EQ(METHOD_PUB(limited_counter, get_value)(pc), 0, "limited_counter初始值错误");
 
-    human_travel(&lihua, "America");
-    char where[200] = {0};
-    human_is_at_where(&lihua, where, 200);
-    ASSERT_STR_EQ(where, "America", "method human_is_at_where not act as expected.");
+    // 测试递增到上限
+    METHOD_PUB(counter, increment)(pc);
+    ASSERT_EQ(METHOD_PUB(limited_counter, get_value)(pc), 1, "limited_counter递增后值错误");
 
+    // 测试设置最大值
+    METHOD_PUB(limited_counter, set_max)(&lc, 5);
+    ASSERT_EQ(METHOD_PUB(limited_counter, get_max)(&lc), 5, "set_max设置错误");
+
+    // 测试析构
+    METHOD_DTOR(limited_counter)(&lc);
     return 0;
 }
 
 TESTCASE(basic_polymo)
 {
-    file_device obj;
-    CONSTRUCT(&obj, file_ctor);
-    file_set_path(&obj, "./example_test.txt");
+    shape *pshape;
+    circle c;
+    rectangle r;
+    float area;
 
-    device *obj_super = THIS_PARENT(&obj, device);
-    device_write(obj_super, "Hello World", sizeof("Hello World"));
+    // 测试 circle 多态
+    METHOD_CTOR(circle)(&c, 0.0f, 0.0f, 1.0f);
+    pshape = THIS_PARENT(&c, shape);
+    
+    area = CALL_VMETHOD_PUB(pshape, get_area) (pshape);
+    ASSERT_NEAR(area, 3.1415926f, "circle面积计算错误", 0.001f);
+    
+    CALL_VMETHOD_PUB(pshape, draw);
 
-    char buf[200] = {0};
-    device_read(obj_super, buf, sizeof("Hello World"));
-    ASSERT_STR_EQ(buf, "Hello World", "polymo call failed.");
+    // 测试 rectangle 多态
+    METHOD_CTOR(rectangle)(&r, 0.0f, 0.0f, 3.0f, 4.0f);
+    pshape = THIS_PARENT(&r, shape);
+    
+    area = CALL_VMETHOD_PUB(pshape, get_area) (pshape);
+    ASSERT_EQ(area, 12.0f, "rectangle面积计算错误");    
+    
+    CALL_VMETHOD_PUB(pshape, draw);
 
+    METHOD_DTOR(circle)(&c);
+    METHOD_DTOR(rectangle)(&r);
     return 0;
 }
 

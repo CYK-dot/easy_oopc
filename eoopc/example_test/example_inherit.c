@@ -1,6 +1,6 @@
 /**
  * @file example_inherit.c
- * @brief Brief description
+ * @brief 继承测试用例实现文件
  * @version 0.1
  * @date 2026-03-02
  *
@@ -20,30 +20,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <string.h>
-#include <stdbool.h>
 #include "example_inherit.h"
 
-CONSTRUCT_METHOD(human_ctor, human, char *name, char *birth_country)
-{
-    CONSTRUCT_BRINGUP(animal, animal_ctor, name);
-    char *buf = PRIVATE_MEMBER_REF(pthis, position_now);
-    strcpy(buf, birth_country);
+void IMPL_METHOD_PUB(limited_counter, set_max)(limited_counter *pthis, uint32_t max_val) {
+    pthis->MEMBER_PUB(max_value) = max_val;
 }
 
-void human_travel(human *pthis, char *destination)
-{
-    if (strlen(destination) >= sizeof(PRIVATE_MEMBER_REF(pthis, position_now))) {
-        return;
-    }
-    char *buf = PRIVATE_MEMBER_REF(pthis, position_now);
-    strcpy(buf, destination);
+uint32_t IMPL_METHOD_PUB(limited_counter, get_max)(limited_counter *pthis) {
+    return pthis->MEMBER_PUB(max_value);
 }
 
-void human_is_at_where(human *pthis, char *out_buf, size_t out_max)
-{
-    if (strlen(PRIVATE_MEMBER_REF(pthis, position_now)) >= (out_max - 1)) {
-        return;
-    }
-    strcpy(out_buf, PRIVATE_MEMBER_REF(pthis, position_now));
+void IMPL_METHOD_CTOR(limited_counter)(limited_counter *pthis, uint32_t initial_value, uint32_t max_val) {
+    counter *base = THIS_PARENT(pthis, counter);
+    METHOD_CTOR(counter)(base, initial_value);
+    pthis->MEMBER_PUB(max_value) = max_val;
+}
+
+void IMPL_METHOD_DTOR(limited_counter)(limited_counter *pthis) {
+    // 简单继承不需要特殊清理
+    (void)pthis;
 }

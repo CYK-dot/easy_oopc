@@ -1,6 +1,6 @@
 /**
  * @file example_polymo.h
- * @brief Brief description
+ * @brief 多态测试用例头文件
  * @version 0.1
  * @date 2026-03-02
  *
@@ -25,19 +25,43 @@
 
 #include <stdint.h>
 #include "eoopc.h"
+#include "example_inherit.h"
 
-CLASS_DECLARE(device)
-    VMETHOD(int, v_write, device, const uint8_t *data, size_t size);
-    VMETHOD(int, v_read, device, uint8_t *data, size_t size);
-DECLARE_END(device);
-void device_write(device *pthis, const uint8_t *data, size_t size);
-void device_read(device *pthis, uint8_t *data, size_t size);
+CLASS_DECLARE(shape);
+    VTABLE_DECLARE(
+        shape,
+        float VMETHOD_PUB(get_area)(shape *pthis);
+        void VMETHOD_PUB(draw)(shape *pthis);
+    );
+    OBJECT_DECLARE(
+        shape,
+        HAVE_VTABLE(shape);
+        float MEMBER_PUB(x);
+        float MEMBER_PUB(y);
+    );
+    void METHOD_CTOR(shape)(shape *pthis, float x, float y);
+    void METHOD_DTOR(shape)(shape *pthis);
+END_CLASS(shape);
 
-CLASS_DECLARE(file_device)
-    CLASS_EXTERND(device);
-    char *current_file;
-DECLARE_END(file_device);
-CONSTRUCT_METHOD(file_ctor, file_device);
-void file_set_path(file_device *pthis, const char *path);
+CLASS_DECLARE(circle);
+    OBJECT_DECLARE(
+        circle,
+        HAVE_PARENT(shape);
+        float MEMBER_PUB(radius);
+    );
+    void METHOD_CTOR(circle)(circle *pthis, float x, float y, float radius);
+    void METHOD_DTOR(circle)(circle *pthis);
+END_CLASS(circle);
+
+CLASS_DECLARE(rectangle);
+    OBJECT_DECLARE(
+        rectangle,
+        HAVE_PARENT(shape);
+        float MEMBER_PUB(width);
+        float MEMBER_PUB(height);
+    );
+    void METHOD_CTOR(rectangle)(rectangle *pthis, float x, float y, float width, float height);
+    void METHOD_DTOR(rectangle)(rectangle *pthis);
+END_CLASS(rectangle);
 
 #endif

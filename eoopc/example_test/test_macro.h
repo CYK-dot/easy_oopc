@@ -25,20 +25,29 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
 
 #define ASSERT_STR_EQ(string1, string2, errno_msg) do { \
     int ret = strcmp((string1), (string2));             \
     if (ret != 0) {                                     \
-        printf("[FAILED] reason: %s\n", #errno_msg);    \
+        printf("[FAILED] reason: %s\n", errno_msg);     \
         return 1;                                       \
     }                                                   \
 } while (0)
 
 #define ASSERT_EQ(val1, val2, errno_msg) do {        \
     if (val1 != val2) {                              \
-        printf("[FAILED] reason: %s\n", #errno_msg); \
+        printf("[FAILED] reason: %s\n", errno_msg); \
         return 1;                                    \
     }                                                \
+} while (0)
+
+#define ASSERT_NEAR(val1, val2, errno_msg, delta) do { \
+    if (fabs(val1 - val2) > delta) {                   \
+        printf("[FAILED] reason: %s\n", errno_msg);    \
+        return 1;                                     \
+    }                                                 \
 } while (0)
 
 #define TESTCASE(case_name) \

@@ -1,8 +1,8 @@
 /**
- * @file example_inherit.h
- * @brief 继承测试用例头文件
+ * @file eoopc_util.h
+ * @brief Brief description
  * @version 0.1
- * @date 2026-03-02
+ * @date 2026-03-08
  *
  * SPDX-FileCopyrightText: 2026 CYK-Dot <chenyukai@xmurcs.cn>
  * SPDX-License-Identifier: GPL-3.0-only
@@ -20,25 +20,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef EXAMPLE_INHERIT_H__
-#define EXAMPLE_INHERIT_H__
+#ifndef EOOPC_UTIL_H__
+#define EOOPC_UTIL_H__
 
-#include "eoopc.h"
-#include "example_encap.h"
-
-/**
- * @brief 一个带最大值限制的计数器类，继承自 counter
- */
-CLASS_DECLARE(limited_counter);
-    OBJECT_DECLARE(
-        limited_counter,
-        HAVE_PARENT(counter);
-        uint32_t MEMBER_PUB(max_value);
-    );
-    void METHOD_PUB(limited_counter, set_max)(limited_counter *pthis, uint32_t max_val);
-    uint32_t METHOD_PUB(limited_counter, get_max)(limited_counter *pthis);
-    void METHOD_CTOR(limited_counter)(limited_counter *pthis, uint32_t initial_value, uint32_t max_val);
-    void METHOD_DTOR(limited_counter)(limited_counter *pthis);
-END_CLASS(limited_counter);
+#define EOOPC_OFFSETOF(type, member) \
+    ((size_t)(&((type *)0)->member))
 
 #endif

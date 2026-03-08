@@ -1,6 +1,6 @@
 /**
- * @file example.c
- * @brief Brief description
+ * @file example_encap.c
+ * @brief 封装测试用例实现文件
  * @version 0.1
  * @date 2026-03-01
  *
@@ -20,30 +20,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <string.h>
-#include <stdio.h>
 #include "example_encap.h"
 
-CONSTRUCT_METHOD(animal_ctor, animal, char *name)
-{
-    pthis->name = name; /** public成员，通过->或.运算符直接访问 */
-    PUBLIC_MEMBER_REF(pthis, health) = 50; /** public成员，也可以通过PUBLIC_MEMBER_REF访问 */
-    PRIVATE_MEMBER_REF(pthis, starve_times) = 0;
+uint32_t IMPL_METHOD_PUB(counter, get_value)(counter *pthis) {
+    return pthis->MEMBER_PUB(value);
 }
 
-static void animal_starve_caculator(animal *pthis) /** 在.c文件中定义静态函数，构成私有方法 */
-{
-    pthis->health -= PRIVATE_MEMBER_REF(pthis, starve_times); 
-    PRIVATE_MEMBER_REF(pthis, starve_times)++;
+void IMPL_METHOD_PUB(counter, increment)(counter *pthis) {
+    pthis->MEMBER_PUB(value)++;
 }
 
-void animal_eat(animal *pthis, int food_energy)
-{
-    pthis->health += food_energy;
-    PRIVATE_MEMBER_REF(pthis, starve_times) = 0;
+void IMPL_METHOD_PUB(counter, decrement)(counter *pthis) {
+    if (pthis->MEMBER_PUB(value) > 0) {
+        pthis->MEMBER_PUB(value)--;
+    }
 }
 
-void animal_starve(animal *pthis)
-{
-    animal_starve_caculator(pthis);
+void IMPL_METHOD_PUB(counter, reset)(counter *pthis) {
+    pthis->MEMBER_PUB(value) = 0;
+}
+
+void IMPL_METHOD_CTOR(counter)(counter *pthis, uint32_t initial_value) {
+    pthis->MEMBER_PUB(value) = initial_value;
+}
+
+void IMPL_METHOD_DTOR(counter)(counter *pthis) {
+    // 简单计数器不需要特殊清理
+    (void)pthis;
 }

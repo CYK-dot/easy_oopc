@@ -1,6 +1,6 @@
 /**
- * @file example.h
- * @brief Brief description
+ * @file example_encap.h
+ * @brief 封装测试用例头文件
  * @version 0.1
  * @date 2026-03-01
  *
@@ -20,23 +20,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef EXAMPLE_H__
-#define EXAMPLE_H__
+#ifndef EXAMPLE_ENCAP_H__
+#define EXAMPLE_ENCAP_H__
 
 #include <stddef.h>
 #include <stdint.h>
 #include "eoopc.h"
 
-CLASS_DECLARE(animal)              /** animal类 */
-    char *name;                    /** 在类中声明变量，默认为pubilic成员 */
-    PUBLIC_MEMBER(int, health);    /** 也可以使用PUBLIC_MEMBER，声明public成员 */
-    PRIVATE_MEMBER(int ,starve_times);
-DECLARE_END(animal);
-
-/** 构造函数，签名为void animal_default_ctor(animal *pthis, char *name) */
-CONSTRUCT_METHOD(animal_ctor, animal, char *name); 
-/** public方法 */
-void animal_eat(animal *pthis, int food_energy);
-void animal_starve(animal *pthis);
+/**
+ * @brief 一个简单的计数器类，用于演示封装特性
+ */
+CLASS_DECLARE(counter);
+    OBJECT_DECLARE(
+        counter,
+        uint32_t MEMBER_PUB(value);
+    );
+    uint32_t METHOD_PUB(counter, get_value)(counter *pthis);
+    void METHOD_PUB(counter, increment)(counter *pthis);
+    void METHOD_PUB(counter, decrement)(counter *pthis);
+    void METHOD_PUB(counter, reset)(counter *pthis);
+    void METHOD_CTOR(counter)(counter *pthis, uint32_t initial_value);
+    void METHOD_DTOR(counter)(counter *pthis);
+END_CLASS(counter);
 
 #endif
