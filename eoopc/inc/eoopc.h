@@ -597,7 +597,7 @@
  * @tparam member_name 成员的名称
  */
 #define THIS_MEMBER_PVT(object_this, member_name) \
-    ((object_this)->MEMBER_PUB(member_name))
+    ((object_this)->MEMBER_PVT(member_name))
 /** @} */
 
 /** --------------------------------------------------------------------------------
