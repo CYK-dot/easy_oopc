@@ -334,7 +334,7 @@
  * @brief 一个符号，表示公开成员
  * @tparam member_name 成员名称
  * 
- * @note 应在 @ref MEMBER_DECLARE 中调用，且可以出现多次。
+ * @note 应在 @ref OBJECT_DECLARE 中调用，且可以出现多次。
  */
 #define MEMBER_PUB(member_name) \
     _mbrpub_##member_name
@@ -343,7 +343,7 @@
  * @brief 一个符号，表示私有成员
  * @tparam member_name 成员名称
  * 
- * @note 应在 @ref MEMBER_DECLARE 中调用，且可以出现多次。
+ * @note 应在 @ref OBJECT_DECLARE 中调用，且可以出现多次。
  */
 #define MEMBER_PVT(member_name) \
     _mbrpvt_##member_name
@@ -352,7 +352,7 @@
  * @brief 声明一条继承关系
  * @tparam parent_class_name 父类名称
  * 
- * @note 应在 @ref MEMBER_DECLARE 中调用，且可以出现多次。
+ * @note 应在 @ref OBJECT_DECLARE 中调用，且可以出现多次。
  */
 #define HAVE_PARENT(parent_class_name) \
     parent_class_name NAME_PARENT_REFER(parent_class_name)
@@ -361,7 +361,7 @@
  * @brief 声明对象携带虚函数表
  * @tparam 类名称
  * 
- * @note 应在 @ref MEMBER_DECLARE 中调用，且只能出现一次。
+ * @note 应在 @ref OBJECT_DECLARE 中调用，且只能出现一次。
  * @par
  * @note 需要确保虚表声明( @ref VTABLE_DECLARE )早于对象声明( @ref OBJECT_DECLARE )，
  *       否则会出现找不到符号的问题 
